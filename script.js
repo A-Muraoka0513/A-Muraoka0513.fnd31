@@ -50,8 +50,6 @@ class Ball {
   }
 }
 
-
-
 function keyDownHandler(e) {
   if (e.key == "Right" || e.key == "ArrowRight") {
     rightPressed = true;
@@ -98,7 +96,6 @@ class Paddle {
     }
   }
 }
-
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
