@@ -1,24 +1,34 @@
 'use strict'
 
-const canvas = document.getElementById("myCanvas");
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const params = {
   score: 0,
-  lives: 3
+  lives: 3,
+  tiemstamp: Date.now(),
+  isTextView: true
 }
 
+const bottomOffset = 50;
 let rightPressed = false;
 let leftPressed = false;
+let stopGame = true;
 
 class Bricks {
   constructor() {
     this.rowCount = 3;
-    this.columnCount = 5;
+    this.columnCount = 6;
     this.padding = 10;
-    this.offsetTop = 30;
+    this.offsetTop = 50;
     this.offsetLeft = 30;
+    this.brickWidth = this.settingBrickWidth();
     this.bricks = this.createBricks();
+    console.log(this.brickWidth)
+  }
+
+  settingBrickWidth() {
+    return (canvas.width - this.padding * (this.columnCount + 1) - this.offsetLeft * 2) / this.columnCount;
   }
 
   createBricks() {
@@ -26,7 +36,7 @@ class Bricks {
     for (let col = 0; col < this.columnCount; col++) {
       bricks[col] = [];
       for (let row = 0; row < this.rowCount; row++) {
-        bricks[col][row] = new Brick(0, 0);
+        bricks[col][row] = new Brick(0, 0, this.brickWidth);
       }
     }
     return bricks;
@@ -65,10 +75,11 @@ class Bricks {
 }
 
 class Brick {
-  constructor(x, y, collor = "#0095DD") {
+  constructor(x, y, width, collor = "#0095DD") {
     this.x;
     this.y;
-    this.width = 75;
+    this.width = width;
+    console.log(this.width)
     this.height = 20;
     this.collor = collor;
     this.isAlive = true;
@@ -91,7 +102,7 @@ class Ball {
 
   positionInitialization() {
     this.x = canvas.width / 2;
-    this.y = canvas.height - 30;
+    this.y = canvas.height - bottomOffset - 30;
     this.dx = 2;
     this.dy = -2;
   }
@@ -133,24 +144,26 @@ class Ball {
 class Paddle {
   constructor() {
     this.height = 10;
-    this.width = 75;
+    this.width = canvas.width / 6;
     this.positionInitialization();
   }
 
   positionInitialization() {
     this.x = (canvas.width - this.width) / 2;
+    this.y = canvas.height - bottomOffset - this.height;
   }
 
   draw() {
     ctx.beginPath();
-    ctx.rect(this.x, canvas.height - this.height, this.width, this.height);
+    ctx.rect(this.x, this.y, this.width, this.height);
     ctx.fillStyle = "#0095DD";
     ctx.fill();
     ctx.closePath();
   }
 
-  isBlocked(ballPositionX) {
-    return ballPositionX > this.x && ballPositionX < this.x + this.width;
+  isBlocked(ballPositionX, ballPositionY) {
+    return ballPositionX > this.x && ballPositionX < this.x + this.width 
+        && ballPositionY > this.y && ballPositionY < this.y + this.height ;
   }
 
   updatePosition(rightPressed, leftPressed) {
@@ -170,15 +183,29 @@ class Paddle {
 }
 
 function drawScore() {
-  ctx.font = "16px Arial";
+  ctx.font = "20px Arial";
   ctx.fillStyle = "#0095DD";
   ctx.fillText(`Score: ${params.score}`, 8, 20);
 }
 
 function drawLives() {
-  ctx.font = "16px Arial";
+  ctx.font = "20px Arial";
   ctx.fillStyle = "#0095DD";
-  ctx.fillText(`Lives: ${lives}`, canvas.width - 65, 20);
+  ctx.fillText(`${getLives(params.lives)}`, canvas.width - 100, 20);
+}
+
+function getLives(num) {
+  let res = "";
+  for (let i = 0; i < num; i++) {
+    res += "💗";
+  }
+  return res;
+}
+
+function drawStartText() {
+  ctx.font = "45px Arial";
+  ctx.fillStyle = "#0095DD";
+  ctx.fillText("Press Enter key!", 175, canvas.height / 2);
 }
 
 function keyDownHandler(e) {
@@ -199,12 +226,11 @@ function keyUpHandler(e) {
   }
 }
 
-function mouseMoveHandler(e) {
-  const relativeX = e.clientX - canvas.offsetLeft;
-  paddle.seamlessPositionUpdates(relativeX);
+function keyPressHandler(e) {
+  if (e.key === "Enter" && stopGame) {
+    stopGame = false;
+  }
 }
-
-
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -212,39 +238,55 @@ function draw() {
   paddle.draw();
   bricks.draw();
   drawScore();
+  drawLives();
 
   bricks.collisionDetection(ball);
 
-  if (ball.isCollisionWithXWall()) {
-    ball.flipXDirection();
-  }
+  if (stopGame) {
+    if (params.isTextView) {
+      drawStartText();
+    }
+    if (Date.now() - params.tiemstamp > 750) {
+      params.tiemstamp = Date.now();
+      params.isTextView = !params.isTextView
+    }
+  } else {
+    if (ball.isCollisionWithXWall()) {
+      ball.flipXDirection();
+    }
 
-  if (ball.isCollisionWithTopWall()) {
-    ball.flipYDirection();
-  }
-  else if (ball.isCollisionWithBottomWall()) {
-    if (paddle.isBlocked(ball.x)) {
+    if (ball.isCollisionWithTopWall()) {
       ball.flipYDirection();
     }
-    else {
-      params.lives--;
-      if (params.lives < 0) {
-        alert("GAME OVER");
-        document.location.reload();
-      } else {
-        ball.positionInitialization();
+    if (paddle.isBlocked(ball.x, ball.y)) {
+      ball.flipYDirection();
+    }
+    if (ball.isCollisionWithBottomWall()) {
+        params.lives--;
+        if (params.lives < 1) {
+          alert("GAME OVER");
+          params.lives = 3;
+          params.score = 0;
+          document.location.reload();
+        } else {
+          stopGame = true;
+          ball.positionInitialization();
+          paddle.positionInitialization();
+        
       }
     }
+
+    paddle.updatePosition(rightPressed, leftPressed);
+    ball.updatePosition();
   }
-  paddle.updatePosition(rightPressed, leftPressed);
-  ball.updatePosition();
+
   requestAnimationFrame(draw);
 }
 
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
-document.addEventListener("mousemove", mouseMoveHandler, false);
+document.addEventListener("keypress", keyPressHandler, false);
 
 
 const ball = new Ball();

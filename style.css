@@ -1,10 +1,21 @@
-* {
-  padding: 10;
-  margin: 10;
+#gameTop {
+  position: relative;
 }
 
-canvas {
+body {
+  margin: 5% 25%;
+
+}
+
+img {
+  position: absolute;
+}
+
+#canvas {
   background: #c7c7c7;
   display: block;
-  margin: 0 auto;
+  position: absolute;
+  top: 42px;
+  left: 38px;
 }
+
