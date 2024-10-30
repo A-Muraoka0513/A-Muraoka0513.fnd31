@@ -1,21 +1,16 @@
-#gameTop {
-  position: relative;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-body {
-  margin: 5% 25%;
-
-}
-
-img {
-  position: absolute;
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
 #canvas {
-  background: #c7c7c7;
+  background: #696969;
   display: block;
-  position: absolute;
-  top: 42px;
-  left: 38px;
 }
 

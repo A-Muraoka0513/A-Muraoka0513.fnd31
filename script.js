@@ -11,17 +11,25 @@ const params = {
 }
 
 const bottomOffset = 50;
+const textCollor = "#f8f8ff";
 let rightPressed = false;
 let leftPressed = false;
 let stopGame = true;
 
+function resizeCanvas() {
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
+}
+
 class Bricks {
   constructor() {
     this.rowCount = 3;
-    this.columnCount = 6;
+    this.columnCount = 7;
     this.padding = 10;
     this.offsetTop = 50;
     this.offsetLeft = 30;
+    this.speedSet = {0:1.7, 1:1.4, 2:1}
+    this.collorSet = {0:"#dc143c", 1:"#ffd700", 2:"#228b22"}
     this.brickWidth = this.settingBrickWidth();
     this.bricks = this.createBricks();
     console.log(this.brickWidth)
@@ -36,7 +44,7 @@ class Bricks {
     for (let col = 0; col < this.columnCount; col++) {
       bricks[col] = [];
       for (let row = 0; row < this.rowCount; row++) {
-        bricks[col][row] = new Brick(0, 0, this.brickWidth);
+        bricks[col][row] = new Brick({x:0, y:0, width:this.brickWidth, collor:this.collorSet[row], speedSet : this.speedSet[row]});
       }
     }
     return bricks;
@@ -62,6 +70,7 @@ class Bricks {
           if (ball.x > brick.x && ball.x < brick.x + brick.width && ball.y > brick.y && ball.y < brick.y + brick.height) {
             ball.flipYDirection();
             brick.isAlive = false;
+            ball.updateSpeed(brick.speedSet)
             params.score++;
             if (params.score === this.rowCount * this.columnCount) {
               alert("YOU WIN, CONGRATULATIONS!");
@@ -75,7 +84,7 @@ class Bricks {
 }
 
 class Brick {
-  constructor(x, y, width, collor = "#0095DD") {
+  constructor({x, y, width, collor = "#0095DD", speedSet=1}) {
     this.x;
     this.y;
     this.width = width;
@@ -83,6 +92,7 @@ class Brick {
     this.height = 20;
     this.collor = collor;
     this.isAlive = true;
+    this.speedSet = speedSet;
   }
 
   draw() {
@@ -96,21 +106,22 @@ class Brick {
 
 class Ball {
   constructor() {
-    this.ballRadius = 10;
-    this.positionInitialization();
+    this.radius = 11;
+    this.speed = 1;
+    this.posInit();
   }
 
-  positionInitialization() {
+  posInit() {
     this.x = canvas.width / 2;
-    this.y = canvas.height - bottomOffset - 30;
+    this.y = canvas.height - bottomOffset - 40;
     this.dx = 2;
     this.dy = -2;
   }
 
   draw() {
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#0095DD";
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#e0ffff";
     ctx.fill();
     ctx.closePath();
   }
@@ -124,20 +135,26 @@ class Ball {
   }
 
   updatePosition() {
-    this.x += this.dx;
-    this.y += this.dy;
+    this.x += this.dx * this.speed;
+    this.y += this.dy * this.speed;
   }
 
   isCollisionWithXWall() {
-    return this.x + this.dx > canvas.width - this.ballRadius || this.x + this.dx < this.ballRadius;
+    return this.x + this.dx > canvas.width - this.radius || this.x + this.dx < this.radius;
   }
 
   isCollisionWithTopWall() {
-    return this.y + this.dy < this.ballRadius;
+    return this.y + this.dy < this.radius;
   }
 
   isCollisionWithBottomWall() {
-    return this.y + this.dy > canvas.height - this.ballRadius;
+    return this.y + this.dy > canvas.height - this.radius;
+  }
+
+  updateSpeed(speed) {
+    if (this.speed < speed){
+      this.speed = speed;
+    }
   }
 }
 
@@ -145,10 +162,10 @@ class Paddle {
   constructor() {
     this.height = 10;
     this.width = canvas.width / 6;
-    this.positionInitialization();
+    this.posInit();
   }
 
-  positionInitialization() {
+  posInit() {
     this.x = (canvas.width - this.width) / 2;
     this.y = canvas.height - bottomOffset - this.height;
   }
@@ -156,14 +173,14 @@ class Paddle {
   draw() {
     ctx.beginPath();
     ctx.rect(this.x, this.y, this.width, this.height);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "#87cefa";
     ctx.fill();
     ctx.closePath();
   }
 
-  isBlocked(ballPositionX, ballPositionY) {
-    return ballPositionX > this.x && ballPositionX < this.x + this.width 
-        && ballPositionY > this.y && ballPositionY < this.y + this.height ;
+  isBlocked(ball) {
+    return ball.x > this.x && ball.x < this.x + this.width 
+        && ball.y > this.y && ball.y < this.y + this.height ;
   }
 
   updatePosition(rightPressed, leftPressed) {
@@ -174,23 +191,19 @@ class Paddle {
       this.x -= 7;
     }
   }
-
-  seamlessPositionUpdates(relativeX) {
-    if (relativeX > 0 && relativeX < canvas.width) {
-      this.x = relativeX - this.width / 2;
-    }
-  }
 }
 
 function drawScore() {
   ctx.font = "20px Arial";
-  ctx.fillStyle = "#0095DD";
+  ctx.fillStyle = textCollor;
+  ctx.textAlign = "left";
   ctx.fillText(`Score: ${params.score}`, 8, 20);
 }
 
 function drawLives() {
   ctx.font = "20px Arial";
-  ctx.fillStyle = "#0095DD";
+  ctx.fillStyle = textCollor;
+  ctx.textAlign = "left";
   ctx.fillText(`${getLives(params.lives)}`, canvas.width - 100, 20);
 }
 
@@ -204,8 +217,9 @@ function getLives(num) {
 
 function drawStartText() {
   ctx.font = "45px Arial";
-  ctx.fillStyle = "#0095DD";
-  ctx.fillText("Press Enter key!", 175, canvas.height / 2);
+  ctx.fillStyle = textCollor;
+  ctx.textAlign = "center"
+  ctx.fillText("Press Enter key!", canvas.width / 2, canvas.height / 2);
 }
 
 function keyDownHandler(e) {
@@ -258,7 +272,7 @@ function draw() {
     if (ball.isCollisionWithTopWall()) {
       ball.flipYDirection();
     }
-    if (paddle.isBlocked(ball.x, ball.y)) {
+    if (paddle.isBlocked(ball)) {
       ball.flipYDirection();
     }
     if (ball.isCollisionWithBottomWall()) {
@@ -270,9 +284,8 @@ function draw() {
           document.location.reload();
         } else {
           stopGame = true;
-          ball.positionInitialization();
-          paddle.positionInitialization();
-        
+          ball.posInit();
+          paddle.posInit();
       }
     }
 
@@ -283,12 +296,12 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 document.addEventListener("keypress", keyPressHandler, false);
+window.addEventListener("resize", resizeCanvas);
 
-
+resizeCanvas()
 const ball = new Ball();
 const paddle = new Paddle();
 const bricks = new Bricks();
