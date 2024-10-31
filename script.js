@@ -10,8 +10,8 @@ const params = {
   isTextView: true
 }
 
-const bottomOffset = 50;
-const textCollor = "#f8f8ff";
+const bottomOffset = 100;
+const textColor = "#f8f8ff";
 let rightPressed = false;
 let leftPressed = false;
 let stopGame = true;
@@ -28,7 +28,7 @@ class Bricks {
     this.padding = 10;
     this.offsetTop = 50;
     this.offsetLeft = 30;
-    this.speedSet = {0:1.7, 1:1.4, 2:1}
+    this.speedSet = {0:2.5, 1:1.2, 2:1.8}
     this.collorSet = {0:"#dc143c", 1:"#ffd700", 2:"#228b22"}
     this.brickWidth = this.settingBrickWidth();
     this.bricks = this.createBricks();
@@ -107,7 +107,7 @@ class Brick {
 class Ball {
   constructor() {
     this.radius = 11;
-    this.speed = 1;
+    this.speed = 1.8;
     this.posInit();
   }
 
@@ -195,14 +195,14 @@ class Paddle {
 
 function drawScore() {
   ctx.font = "20px Arial";
-  ctx.fillStyle = textCollor;
+  ctx.fillStyle = textColor;
   ctx.textAlign = "left";
   ctx.fillText(`Score: ${params.score}`, 8, 20);
 }
 
 function drawLives() {
   ctx.font = "20px Arial";
-  ctx.fillStyle = textCollor;
+  ctx.fillStyle = textColor;
   ctx.textAlign = "left";
   ctx.fillText(`${getLives(params.lives)}`, canvas.width - 100, 20);
 }
@@ -217,9 +217,16 @@ function getLives(num) {
 
 function drawStartText() {
   ctx.font = "45px Arial";
-  ctx.fillStyle = textCollor;
+  ctx.fillStyle = textColor;
   ctx.textAlign = "center"
   ctx.fillText("Press Enter key!", canvas.width / 2, canvas.height / 2);
+}
+
+function drawOperationExplanation() {
+  ctx.font = "35px Arial";
+  ctx.fillStyle = textColor;
+  ctx.textAlign = "center"
+  ctx.fillText("⇦  Move the left or right key!  ⇨", canvas.width / 2, canvas.height -20);
 }
 
 function keyDownHandler(e) {
@@ -257,6 +264,7 @@ function draw() {
   bricks.collisionDetection(ball);
 
   if (stopGame) {
+    drawOperationExplanation();
     if (params.isTextView) {
       drawStartText();
     }
