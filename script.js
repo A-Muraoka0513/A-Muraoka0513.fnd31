@@ -32,7 +32,6 @@ class Bricks {
     this.collorSet = {0:"#dc143c", 1:"#ffd700", 2:"#228b22"}
     this.brickWidth = this.settingBrickWidth();
     this.bricks = this.createBricks();
-    console.log(this.brickWidth)
   }
 
   settingBrickWidth() {
@@ -88,7 +87,6 @@ class Brick {
     this.x;
     this.y;
     this.width = width;
-    console.log(this.width)
     this.height = 20;
     this.collor = collor;
     this.isAlive = true;
