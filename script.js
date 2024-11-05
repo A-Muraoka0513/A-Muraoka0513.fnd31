@@ -28,7 +28,7 @@ class Bricks {
     this.padding = 10;
     this.offsetTop = 50;
     this.offsetLeft = 30;
-    this.speedSet = {0:2.5, 1:1.2, 2:1.8}
+    this.speedSet = {0:2.5, 1:2.1, 2:1.8}
     this.collorSet = {0:"#dc143c", 1:"#ffd700", 2:"#228b22"}
     this.brickWidth = this.settingBrickWidth();
     this.bricks = this.createBricks();
